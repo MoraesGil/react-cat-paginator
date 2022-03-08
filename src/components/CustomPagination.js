@@ -18,26 +18,27 @@ const CustomPagination = ({
   totalPages,
   setCurrentPage,
   currentPage,
-  maxDisplay = 15,
+  maxTiles = 15,
   slices = 3
 }) => {
   const nextPageValue = currentPage + 1;
   const previousPageValue = currentPage - 1;
-  const maxDisplayPerSlice = Math.ceil(maxDisplay / slices);
-  const maxRangeSlice = totalPages / slices;
+  const visibleTilesPerSlice = Math.ceil(maxTiles / slices);
+  const maxTilesRange = totalPages / slices;
   const disableNext = nextPageValue > totalPages;
   const disablePrev = previousPageValue < 1;
-  const mustToSlice = totalPages > maxDisplay;
+  const mustToSlice = totalPages > maxTiles;
+  
   const [slicesRange, setSlicesRange] = useState({});
 
   const calculateRangeSlice = useCallback(
     index => {
-      const min4SliceRange = Math.ceil(maxRangeSlice * (index - 1) + 1);
-      const max4SliceRange = Math.ceil(maxRangeSlice * index);
+      const min4SliceRange = Math.ceil(maxTilesRange * (index - 1) + 1);
+      const max4SliceRange = Math.ceil(maxTilesRange * index);
       const isLastSlice = index === slices;
       const currentIsHigherEqualMin = currentPage >= min4SliceRange;
       const currentIsLowerEqualMax = currentPage <= max4SliceRange;
-      const lastInnerPage = maxRangeSlice / maxDisplayPerSlice;
+      const lastInnerPage = maxTilesRange / visibleTilesPerSlice;
       const belongsRange = currentIsLowerEqualMax && currentIsHigherEqualMin;
       const isFirstRenderLast = isLastSlice && !slicesRange[index];
 
@@ -49,13 +50,13 @@ const CustomPagination = ({
         let innerPages = 1;
 
         if (!belongsRange) {
-          return paginate(getInnerRange(), maxDisplayPerSlice, 1);
+          return paginate(getInnerRange(), visibleTilesPerSlice, 1);
         }
 
         do {
           pagination = paginate(
             getInnerRange(),
-            maxDisplayPerSlice,
+            visibleTilesPerSlice,
             innerPages
           );
           innerPages++;
@@ -73,12 +74,12 @@ const CustomPagination = ({
       }
 
       if (isFirstRenderLast) {
-        return paginate(getInnerRange(), maxDisplayPerSlice, lastInnerPage);
+        return paginate(getInnerRange(), visibleTilesPerSlice, lastInnerPage);
       }
       return defaultRender();
     },
 
-    [currentPage, maxDisplayPerSlice, maxRangeSlice, slices, slicesRange]
+    [currentPage, visibleTilesPerSlice, maxTilesRange, slices, slicesRange]
   );
 
   const updateSliceRange = useCallback(() => {
@@ -93,10 +94,11 @@ const CustomPagination = ({
 
     setSlicesRange(computedRanges);
   }, [calculateRangeSlice, mustToSlice, slices]);
+ 
 
   useEffect(() => {
     updateSliceRange();
-  }, [totalPages, setCurrentPage, currentPage, maxDisplay, slices]);
+  }, [totalPages, setCurrentPage, currentPage, maxTiles, slices]);
 
   const renderEllipse = () => <Pagination.Ellipsis disabled />;
 
