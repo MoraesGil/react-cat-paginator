@@ -28,7 +28,7 @@ const CustomPagination = ({
   const disableNext = nextPageValue > totalPages;
   const disablePrev = previousPageValue < 1;
   const mustToSlice = totalPages > maxTiles;
-  
+
   const [slicesRange, setSlicesRange] = useState({});
 
   const calculateRangeSlice = useCallback(
@@ -94,7 +94,7 @@ const CustomPagination = ({
 
     setSlicesRange(computedRanges);
   }, [calculateRangeSlice, mustToSlice, slices]);
- 
+
 
   useEffect(() => {
     updateSliceRange();
