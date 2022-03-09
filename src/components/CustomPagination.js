@@ -32,7 +32,7 @@ const CustomPagination = ({
   const [slicesRange, setSlicesRange] = useState({});
 
   const computeSlice = useCallback(
-    index => {
+    (index, currentPage) => {
       const min4SliceRange = Math.ceil(maxTilesRange * (index - 1) + 1);
       const max4SliceRange = Math.ceil(maxTilesRange * index);
       const isLastSlice = index === slices;
@@ -85,13 +85,13 @@ const CustomPagination = ({
       return renderRange();
     },
 
-    [currentPage, visibleTilesPerSlice, maxTilesRange, slices, slicesRange]
+    [visibleTilesPerSlice, maxTilesRange, slices, slicesRange]
   );
 
   const computeSlices = useCallback(() => {
     const computedSlices = createRangeArray(1, mustToSlice ? slices : 1).reduce(
       (acc, cur) => {
-        const computedRange = computeSlice(cur);
+        const computedRange = computeSlice(cur, currentPage);
 
         return { ...acc, [cur]: computedRange };
       },
@@ -101,18 +101,18 @@ const CustomPagination = ({
 
       setSlicesRange(computedSlices);
     }
-  }, [computeSlice, mustToSlice, slices, slicesRange]);
+  }, [computeSlice, currentPage, mustToSlice, slices, slicesRange]);
 
   useEffect(() => {
     computeSlices();
-  }, [totalPages, currentPage, maxTiles, slices]);
- 
+  }, [totalPages, currentPage, maxTiles, slices, computeSlices]);
+
   const renderEllipse = () => <Pagination.Ellipsis disabled />;
 
   const renderLink = number => (
     <Pagination.Item
       active={number === currentPage}
-      onClick={() => handleClick(number)}
+      onClick={() => clickHandler.handleClick(number)}
     >
       {number}
     </Pagination.Item>
@@ -136,33 +136,35 @@ const CustomPagination = ({
     });
   };
 
-  const handleClick = number => {
-    setCurrentPage(number);
-  };
-  const firstPage = () => {
-    setCurrentPage(1);
-  };
-  const prevPage = () => {
-    if (!disablePrev) {
-      setCurrentPage(previousPageValue);
-    }
-  };
-  const nextPage = () => {
-    if (!disableNext) {
-      setCurrentPage(nextPageValue);
-    }
-  };
-  const lastPage = () => {
-    setCurrentPage(totalPages);
-  };
+  const clickHandler = {
+    handleClick: number => {
+      setCurrentPage(number);
+    },
+    firstPage: () => {
+      setCurrentPage(1);
+    },
+    prevPage: () => {
+      if (!disablePrev) {
+        setCurrentPage(previousPageValue);
+      }
+    },
+    nextPage: () => {
+      if (!disableNext) {
+        setCurrentPage(nextPageValue);
+      }
+    },
+    lastPage: () => {
+      setCurrentPage(totalPages);
+    },
+  }
 
   return (
     <Pagination>
-      <Pagination.First disabled={disablePrev} onClick={() => firstPage()} />
-      <Pagination.Prev disabled={disablePrev} onClick={() => prevPage()} />
+      <Pagination.First disabled={disablePrev} onClick={() => clickHandler.firstPage()} />
+      <Pagination.Prev disabled={disablePrev} onClick={() => clickHandler.prevPage()} />
       <Pagination>{renderSlices()}</Pagination>
-      <Pagination.Next disabled={disableNext} onClick={() => nextPage()} />
-      <Pagination.Last disabled={disableNext} onClick={() => lastPage()} />
+      <Pagination.Next disabled={disableNext} onClick={() => clickHandler.nextPage()} />
+      <Pagination.Last disabled={disableNext} onClick={() => clickHandler.lastPage()} />
     </Pagination>
   );
 };
