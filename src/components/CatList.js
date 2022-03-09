@@ -20,7 +20,7 @@ const CatList = () => {
     setCurrentPage(page);
   };
 
-  const handleClose = page => {
+  const handleClose = () => {
     setCurrentCat(null);
   };
 
@@ -49,7 +49,7 @@ const CatList = () => {
     debounce(() => {
       fetchData({ limit: catsPerPage, page: currentPage, order: "desc" });
     }, 500)();
-  }, [currentPage]);
+  }, [currentPage, fetchData]);
 
   return (
     <Container fluid="md" className="mt-5">
@@ -110,15 +110,15 @@ const CatList = () => {
         <Row className="justify-content-center">Fetching Data...</Row>
       )}
 
-      <Modal fullscreen show={currentCat !== null} onHide={handleClose}>
+      {currentCat && <Modal show={currentCat !== null} onHide={handleClose}>
         <Modal.Header closeButton>
-          <Modal.Title>Cat code: {currentCat?.id}</Modal.Title>
+          <Modal.Title> <h1>Cat Details</h1></Modal.Title>
         </Modal.Header>
 
         <Modal.Body>
           <CatDetails cat={currentCat} />
         </Modal.Body>
-      </Modal>
+      </Modal>}
     </Container>
   );
 };
