@@ -69,20 +69,19 @@ const CatList = () => {
                   <tr>
                     <th scope="col">#</th>
                     <th scope="col">Picture</th>
-                    <th scope="col">Race</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {cats.map((cat, index) => (
+                  {cats.map((cat) => (
                     <tr
                       onClick={() => {
                         setCurrentCat(cat);
                       }}
                       key={`${cat.id}-key`}
                     >
-                      <td> {`#${index + 1} - ${cat.id}`}</td>
+                      <td> ${cat.id} </td>
                       <td>
-                        <div>
+                        <div className="center">
                           <Image
                             key={`${cat.id}-key-img`}
                             className="w-50"
@@ -92,10 +91,6 @@ const CatList = () => {
                             alt={`${cat.id}-img`}
                           />
                         </div>
-                      </td>
-                      <td className="w-50">
-                        Quis Lorem ea velit mollit Lorem aute quis nisi quis
-                        velit exercitation voluptate esse ullamco.
                       </td>
                     </tr>
                   ))}

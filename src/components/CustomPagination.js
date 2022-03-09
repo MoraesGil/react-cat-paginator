@@ -31,8 +31,8 @@ const CustomPagination = ({
 
   const [slicesRange, setSlicesRange] = useState({});
 
-  const calculateRangeSlice = useCallback(
-    index => {
+  const computeSlice = useCallback(
+    (index, currentPage) => {
       const min4SliceRange = Math.ceil(maxTilesRange * (index - 1) + 1);
       const max4SliceRange = Math.ceil(maxTilesRange * index);
       const isLastSlice = index === slices;
@@ -40,72 +40,79 @@ const CustomPagination = ({
       const currentIsLowerEqualMax = currentPage <= max4SliceRange;
       const lastInnerPage = maxTilesRange / visibleTilesPerSlice;
       const belongsRange = currentIsLowerEqualMax && currentIsHigherEqualMin;
-      const isFirstRenderLast = isLastSlice && !slicesRange[index];
+      const notBelongsRange = !belongsRange;
+
+
+      const renderCases = {
+        notBelongsRangeAndExists: !belongsRange && slicesRange[index],
+        alreadyRendered: slicesRange[index] && slicesRange[index].includes(currentPage),
+        isFirstRenderLastSlice: isLastSlice && !slicesRange[index]
+      }
+
+      const renderCase = Object.keys(renderCases).filter((r) => renderCases[r])[0]
 
       const getInnerRange = () =>
         createRangeArray(min4SliceRange, max4SliceRange);
 
-      const defaultRender = () => {
-        let pagination = [];
-        let innerPages = 1;
+      const renders = {
+        notBelongsRangeAndExists: () => slicesRange[index],
+        alreadyRendered: () => slicesRange[index],
+        isFirstRenderLastSlice: () => paginate(getInnerRange(), visibleTilesPerSlice, lastInnerPage),
+        defaultRender: () => {
 
-        if (!belongsRange) {
-          return paginate(getInnerRange(), visibleTilesPerSlice, 1);
-        }
+          if (notBelongsRange) {
+            return paginate(getInnerRange(), visibleTilesPerSlice, 1);
+          }
 
-        do {
-          pagination = paginate(
-            getInnerRange(),
-            visibleTilesPerSlice,
-            innerPages
-          );
-          innerPages++;
-        } while (!pagination.includes(currentPage));
+          let pagination = [];
+          let innerPages = 1;
 
-        return pagination;
-      };
+          do {
+            pagination = paginate(
+              getInnerRange(),
+              visibleTilesPerSlice,
+              innerPages
+            );
+            innerPages++;
+          } while (!pagination.includes(currentPage));
 
-      if (!belongsRange && slicesRange[index]) {
-        return slicesRange[index];
+          return pagination;
+        },
       }
 
-      if (slicesRange[index] && slicesRange[index].includes(currentPage)) {
-        return slicesRange[index];
-      }
+      const renderRange = renders[renderCase] || renders['defaultRender'];
 
-      if (isFirstRenderLast) {
-        return paginate(getInnerRange(), visibleTilesPerSlice, lastInnerPage);
-      }
-      return defaultRender();
+      return renderRange();
     },
 
-    [currentPage, visibleTilesPerSlice, maxTilesRange, slices, slicesRange]
+    [visibleTilesPerSlice, maxTilesRange, slices, slicesRange]
   );
 
-  const updateSliceRange = useCallback(() => {
-    const computedRanges = createRangeArray(1, mustToSlice ? slices : 1).reduce(
+  const computeSlices = useCallback(() => {
+    const computedSlices = createRangeArray(1, mustToSlice ? slices : 1).reduce(
       (acc, cur) => {
-        const computedRange = calculateRangeSlice(cur);
+        const computedRange = computeSlice(cur, currentPage);
 
         return { ...acc, [cur]: computedRange };
       },
       {}
     );
+    if (computedSlices !== slicesRange) {
 
-    setSlicesRange(computedRanges);
-  }, [calculateRangeSlice, mustToSlice, slices]);
-
+      setSlicesRange(computedSlices);
+    }
+  }, [computeSlice, currentPage, mustToSlice, slices, slicesRange]);
 
   useEffect(() => {
-    updateSliceRange();
-  }, [totalPages, setCurrentPage, currentPage, maxTiles, slices]);
+    computeSlices();
+  }, [totalPages, currentPage, maxTiles, slices, computeSlices]);
 
   const renderEllipse = () => <Pagination.Ellipsis disabled />;
 
   const renderLink = number => (
     <Pagination.Item
       active={number === currentPage}
-      onClick={() => handleClick(number)}
+      onClick={() => clickHandler.handleClick(number)}
     >
       {number}
     </Pagination.Item>
@@ -129,33 +136,35 @@ const CustomPagination = ({
     });
   };
 
-  const handleClick = number => {
-    setCurrentPage(number);
-  };
-  const firstPage = () => {
-    setCurrentPage(1);
-  };
-  const prevPage = () => {
-    if (!disablePrev) {
-      setCurrentPage(previousPageValue);
-    }
-  };
-  const nextPage = () => {
-    if (!disableNext) {
-      setCurrentPage(nextPageValue);
-    }
-  };
-  const lastPage = () => {
-    setCurrentPage(totalPages);
-  };
+  const clickHandler = {
+    handleClick: number => {
+      setCurrentPage(number);
+    },
+    firstPage: () => {
+      setCurrentPage(1);
+    },
+    prevPage: () => {
+      if (!disablePrev) {
+        setCurrentPage(previousPageValue);
+      }
+    },
+    nextPage: () => {
+      if (!disableNext) {
+        setCurrentPage(nextPageValue);
+      }
+    },
+    lastPage: () => {
+      setCurrentPage(totalPages);
+    },
+  }
 
   return (
     <Pagination>
-      <Pagination.First disabled={disablePrev} onClick={() => firstPage()} />
-      <Pagination.Prev disabled={disablePrev} onClick={() => prevPage()} />
+      <Pagination.First disabled={disablePrev} onClick={() => clickHandler.firstPage()} />
+      <Pagination.Prev disabled={disablePrev} onClick={() => clickHandler.prevPage()} />
       <Pagination>{renderSlices()}</Pagination>
-      <Pagination.Next disabled={disableNext} onClick={() => nextPage()} />
-      <Pagination.Last disabled={disableNext} onClick={() => lastPage()} />
+      <Pagination.Next disabled={disableNext} onClick={() => clickHandler.nextPage()} />
+      <Pagination.Last disabled={disableNext} onClick={() => clickHandler.lastPage()} />
     </Pagination>
   );
 };
