@@ -105,7 +105,7 @@ const CustomPagination = ({
 
   useEffect(() => {
     computeSlices();
-  }, [totalPages, currentPage, maxTiles, slices, computeSlices]);
+  }, [totalPages, currentPage, maxTiles, slices]);
 
   const renderEllipse = () => <Pagination.Ellipsis disabled />;
 
